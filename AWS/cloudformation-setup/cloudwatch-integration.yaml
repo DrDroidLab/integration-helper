@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template to create an IAM user with CloudWatch read-only access'
+
+Parameters:
+  Username:
+    Type: String
+    Default: cloudwatch-integration-user
+    Description: Name of the IAM user for CloudWatch access
+    MinLength: 1
+    MaxLength: 64
+    AllowedPattern: '[\w+=,.@-]+'
+    ConstraintDescription: Must be a valid IAM username.
+    
+  Region:
+    Type: String
+    Default: us-east-1
+    Description: AWS region for CloudWatch integration
+    AllowedValues:
+      - us-east-1
+      - us-east-2
+      - us-west-1
+      - us-west-2
+      - ca-central-1
+      - eu-west-1
+      - eu-west-2
+      - eu-west-3
+      - eu-central-1
+      - eu-north-1
+      - ap-northeast-1
+      - ap-northeast-2
+      - ap-northeast-3
+      - ap-southeast-1
+      - ap-southeast-2
+      - ap-southeast-3
+      - ap-southeast-4
+      - ap-southeast-5
+      - ap-southeast-6
+      - ap-southeast-7
+      - ap-south-1
+      - ap-south-2
+      - sa-east-1
+      - af-south-1
+      - ap-east-1
+      - ca-west-1
+      - me-south-1
+      - me-central-1
+      - us-gov-east-1
+      - us-gov-west-1
+      - cn-north-1
+      - cn-northwest-1
+
+Resources:
+  CloudWatchUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref Username
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+      Tags:
+        - Key: Purpose
+          Value: CloudWatch Integration
+        - Key: Region
+          Value: !Ref Region
+
+  CloudWatchUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref CloudWatchUser
+      Status: Active
+
+Outputs:
+  UserName:
+    Description: IAM user name
+    Value: !Ref CloudWatchUser
+
+  AccessKeyId:
+    Description: Access Key ID
+    Value: !Ref CloudWatchUserAccessKey
+
+  SecretAccessKey:
+    Description: Secret Access Key
+    Value: !GetAtt CloudWatchUserAccessKey.SecretAccessKey
+    
+  Region:
+    Description: AWS Region for CloudWatch integration
+    Value: !Ref Region
+
+  Instructions:
+    Description: Instructions for using the credentials
+    Value: !Sub |
+      ======= AWS CloudWatch Integration Credentials =======
+      
+      Your credentials for the CloudWatch integration are:
+      
+      User: ${CloudWatchUser}
+      Access Key ID: ${CloudWatchUserAccessKey}
+      Secret Access Key: [Find this value in the CloudFormation stack outputs]
+      Region: ${Region}
+      
+      Use these credentials in your integration platform to connect to CloudWatch.
+      IMPORTANT: Store these credentials securely!
